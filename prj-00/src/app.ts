@@ -1,3 +1,20 @@
+// Drag & Drop interfaces // start //
+
+interface Draggable {
+  dragStartHandler(event: DragEvent): void;
+  dragEndHandler(event: DragEvent): void;
+}
+
+interface DragTarget {
+  // permit the drop
+  dragOverHandler(event: DragEvent): void;
+  // handle drop
+  dropHandler(event: DragEvent): void;
+  // giving feedback to user, no drop happens - use to revert visual update
+  dragLeaveHandler(event: DragEvent): void;
+}
+
+// Drag & Drop interfaces // start //
 // Project type // start //
 enum ProjectStatus {Active, Finished};
 class Project {
@@ -164,8 +181,15 @@ abstract class Component<T extends HTMLElement, U extends HTMLElement> {
 
 // ProjectItem class // start //
 
-class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
+class ProjectItem extends Component<HTMLUListElement, HTMLLIElement>
+implements Draggable {
   private project: Project;
+  get persons() {
+    if(this.project.people === 1) {
+      return '1 person';
+    }
+    return `${this.project.people} persons`
+  }
   constructor(hostId: string, project: Project) {
     super(
       "single-project",
@@ -175,12 +199,27 @@ class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
     )
     console.log(project);
     this.project = project;
+    this.configure();
     this.renderContent();
   }
-  configure() {}
+
+  @autobind
+  dragStartHandler(event: DragEvent): void {
+    console.log(event);
+  }
+
+  @autobind
+  dragEndHandler(_event: DragEvent): void {
+
+  }
+
+  configure() {
+    this.element.addEventListener("dragstart", this.dragStartHandler);
+    this.element.addEventListener("dragend", this.dragEndHandler)
+  }
   renderContent() {
     this.element.querySelector("h2")!.textContent = this.project.title;
-    this.element.querySelector("h3")!.textContent = this.project.people.toString();
+    this.element.querySelector("h3")!.textContent = `${this.persons} assigned`;
     this.element.querySelector("p")!.textContent = this.project.description;
   }
 }
